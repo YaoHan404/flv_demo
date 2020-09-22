@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+    <title>flv.js demo</title>
+    <link rel="stylesheet" type="text/css" href="demo.css" />
+</head>
+
+<body>
+    
+    <div class="mainContainer">
+        <div class="video-container">
+            <div>
+                <video name="videoElement" class="centeredVideo" controls autoplay>
+                    Your browser is too old which doesn't support HTML5 video.
+                </video>
+            </div>
+        </div>
+        <div class="controls">
+            <button onclick="flv_load()">Load</button>
+            <button onclick="flv_start()">Start</button>
+            <button onclick="flv_pause()">Pause</button>
+
+        </div>
+        <!-- <textarea name="logcatbox" class="logcatBox" rows="10" readonly></textarea> -->
+    </div>
+
+    <script src="./node_modules/flv.js/dist/flv.js"></script>
+    
+    <script>
+        // var checkBoxFields = ['hasAudio'];
+        var streamURL; //, mediaSourceURL;
+
+        function flv_load() {
+
+            var i;
+            var mediaDataSource = {
+                type: 'flv',
+                hasVideo: true,
+                url: "http://192.168.1.13:7001/live/movie.flv",
+            };
+            // var mediaDataSource = {
+            //     type: 'rtmp',
+            //     hasVideo: true,
+            //     url: "rtmp://192.168.1.13:1935/live/movie",
+            // };
+
+            flv_load_mds(mediaDataSource);
+
+        }
+        
+        function flv_load_mds(mediaDataSource) {
+            var element = document.getElementsByName('videoElement')[0];
+            if (typeof player !== "undefined") {
+                if (player != null) {
+                    player.unload();
+                    player.detachMediaElement();
+                    player.destroy();
+                    player = null;
+                }
+            }
+            player = flvjs.createPlayer(mediaDataSource, {
+                enableWorker: false,
+                lazyLoadMaxDuration: 3 * 60,
+                seekType: 'range',
+            });
+            player.attachMediaElement(element);
+            player.load();
+        }
+
+        function flv_start() {
+            player.play();
+        }
+
+        function flv_pause() {
+            player.pause();
+        }
+
+
+        function switch_url() {
+            streamURL.className = '';
+            mediaSourceURL.className = 'hidden';
+            saveSettings();
+        }
+
+
+
+        function ls_get(key, def) {
+            try {
+                var ret = localStorage.getItem('flvjs_demo.' + key);
+                if (ret === null) {
+                    ret = def;
+                }
+                return ret;
+            } catch (e) {}
+            return def;
+        }
+
+        function ls_set(key, value) {
+            try {
+                localStorage.setItem('flvjs_demo.' + key, value);
+            } catch (e) {}
+        }
+
+        function saveSettings() {
+
+            s_set('inputMode', 'StreamURL');
+
+            var i;
+            for (i = 0; i < checkBoxFields.length; i++) {
+                var field = checkBoxFields[i];
+                /** @type {HTMLInputElement} */
+                var checkbox = document.getElementById(field);
+                ls_set(field, checkbox.checked ? '1' : '0');
+            }
+
+            var sURL = "http://192.168.1.13:7001/live/movie.flv";
+            // var sURL = "http://127.0.0.1:7001/live/movie.flv";
+            // var sURL = "rtmp://192.168.1.13:1935/live/movie";
+
+            ls_set('sURL', sURL.value);
+ 
+        }
+
+
+        function showVersion() {
+            var version = flvjs.version;
+            document.title = document.title + " (v" + version + ")";
+        }
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            streamURL = document.getElementById('streamURL');
+            mediaSourceURL = document.getElementById('mediaSourceURL');
+            showVersion();
+            flv_load();
+        });
+    </script>
+    
+</body>
+
+</html>
